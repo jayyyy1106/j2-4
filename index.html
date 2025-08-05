@@ -151,15 +151,58 @@
             localStorage.setItem('seatTableData', JSON.stringify(currentData));
         }
 
-        // 随机分配座位
+        // 随机分配座位（带42和4配对逻辑）
         function randomizeSeats() {
             const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
             let numbers = Array.from({length: 47}, (_, i) => i + 1);
-            numbers = numbers.sort(() => Math.random() - 0.5);
             
-            seats.forEach((seat, index) => {
-                seat.textContent = numbers[index];
-            });
+            // 99% chance to pair 42 and 4 together
+            if (Math.random() < 0.99) {
+                // Remove 42 and 4 from the numbers array
+                numbers = numbers.filter(n => n !== 42 && n !== 4);
+                
+                // Shuffle the remaining numbers
+                numbers = numbers.sort(() => Math.random() - 0.5);
+                
+                // Find two adjacent seats
+                const adjacentPairs = [];
+                for (let i = 0; i < seats.length - 1; i++) {
+                    const currentRow = seats[i].parentNode.rowIndex;
+                    const nextRow = seats[i+1].parentNode.rowIndex;
+                    if (currentRow === nextRow) { // Same row
+                        adjacentPairs.push([i, i+1]);
+                    }
+                }
+                
+                if (adjacentPairs.length > 0) {
+                    // Randomly select one adjacent pair
+                    const randomPair = adjacentPairs[Math.floor(Math.random() * adjacentPairs.length)];
+                    
+                    // Put 42 and 4 in these seats
+                    seats[randomPair[0]].textContent = Math.random() < 0.5 ? 42 : 4;
+                    seats[randomPair[1]].textContent = seats[randomPair[0]].textContent === 42 ? 4 : 42;
+                    
+                    // Fill the remaining seats
+                    let numIndex = 0;
+                    for (let i = 0; i < seats.length; i++) {
+                        if (i !== randomPair[0] && i !== randomPair[1]) {
+                            seats[i].textContent = numbers[numIndex++];
+                        }
+                    }
+                } else {
+                    // Fallback if no adjacent seats found
+                    numbers = numbers.concat([42, 4]).sort(() => Math.random() - 0.5);
+                    seats.forEach((seat, index) => {
+                        seat.textContent = numbers[index];
+                    });
+                }
+            } else {
+                // 1% chance regular random
+                numbers = numbers.sort(() => Math.random() - 0.5);
+                seats.forEach((seat, index) => {
+                    seat.textContent = numbers[index];
+                });
+            }
             
             saveCurrentState(); // 保存随机分配结果
         }
