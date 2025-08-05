@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>座位表 (自动保存)</title>
+    <title>初二4 座位表</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -60,11 +60,11 @@
     </style>
 </head>
 <body>
-    <h1>座位表 (自动保存)</h1>
+    <h1>座位表</h1>
     <div class="button-container">
-        <button id="randomizeBtn">随机分配</button>
-        <button id="exportBtn">保存为PNG</button>
-        <button id="resetBtn">重置座位表</button>
+        <button id="randomizeBtn">Randomize 随机分配</button>
+        <button id="exportBtn">Save As PNG 保存为PNG</button>
+        <button id="resetBtn">Reset 重置座位表</button>
     </div>
     <table id="seatTable"></table>
 
@@ -72,20 +72,20 @@
     <script>
         // 根据提供的Excel布局初始化座位
         const seatLayout = [
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "16", "17", null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "1", "13", null, "18", "22", null, "29", "35", null, "32", "3"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "5", "34", null, "14", "41", null, "6", "7", null, "38", "24"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "21", "15", null, "12", "37", null, "4", "8", null, "9", "19", null, "46", "31"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "11", "20", null, "33", "43", null, "42", "30", null, "2", "10", null, "28", "45"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "36", "25", null, "47", "44", null, "26", "39", null, "40", "27", null, "23", null],
-            [null, null, null, null, null, null, null, "教师的座位", null, null, null, null, null, null, null]
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, "16", "17", null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, "1", "13", null, "18", "22", null, "29", "35", null, "32", "3"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, "5", "34", null, "14", "41", null, "6", "7", null, "38", "24"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            ["21", "15", null, "12", "37", null, "4", "8", null, "9", "19", null, "46", "31"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            ["11", "20", null, "33", "43", null, "42", "30", null, "2", "10", null, "28", "45"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            ["36", "25", null, "47", "44", null, "26", "39", null, "40", "27", null, "23", null],
+            [null, null, null, null, null, null, "教师", "的座位", null, null, null, null, null, null]
         ];
 
         // 初始化表格
@@ -103,7 +103,10 @@
                     const td = document.createElement('td');
                     if (cell === null) {
                         td.className = 'empty';
-                    } else if (cell === "教师的座位") {
+                    } else if (cell === "教师") {
+                        td.className = 'teacher';
+                        td.textContent = cell;
+                    } else if (cell === "的座位") {
                         td.className = 'teacher';
                         td.textContent = cell;
                     } else {
