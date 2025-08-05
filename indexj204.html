@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>座位表 (自动保存)</title>
+    <title>初二4 座位表</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -60,11 +60,10 @@
     </style>
 </head>
 <body>
-    <h1>座位表 (自动保存)</h1>
+    <h1>座位表</h1>
     <div class="button-container">
-        <button id="randomizeBtn">随机分配</button>
-        <button id="exportBtn">保存为PNG</button>
-        <button id="resetBtn">重置座位表</button>
+        <button id="randomizeBtn">Randomize 随机分配</button>
+        <button id="exportBtn">Save as PNG 保存为PNG</button>
     </div>
     <table id="seatTable"></table>
 
@@ -72,20 +71,20 @@
     <script>
         // 根据提供的Excel布局初始化座位
         const seatLayout = [
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "16", "17", null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "1", "13", null, "18", "22", null, "29", "35", null, "32", "3"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "5", "34", null, "14", "41", null, "6", "7", null, "38", "24"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "21", "15", null, "12", "37", null, "4", "8", null, "9", "19", null, "46", "31"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "11", "20", null, "33", "43", null, "42", "30", null, "2", "10", null, "28", "45"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "36", "25", null, "47", "44", null, "26", "39", null, "40", "27", null, "23", null],
-            [null, null, null, null, null, null, null, "教师的座位", null, null, null, null, null, null, null]
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, "16", "17", null, null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, "1", "13", null, "18", "22", null, "29", "35", null, "32", "3"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            [null, null, null, "5", "34", null, "14", "41", null, "6", "7", null, "38", "24"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            ["21", "15", null, "12", "37", null, "4", "8", null, "9", "19", null, "46", "31"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            ["11", "20", null, "33", "43", null, "42", "30", null, "2", "10", null, "28", "45"],
+            [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+            ["36", "25", null, "47", "44", null, "26", "39", null, "40", "27", null, "23", null],
+            [null, null, null, null, null, null, "教师", "座位", null, null, null, null, null, null]
         ];
 
         // 初始化表格
@@ -93,13 +92,9 @@
             const table = document.getElementById('seatTable');
             table.innerHTML = '';
             
-            // 尝试从localStorage加载保存的数据
-            const savedData = localStorage.getItem('seatTableData');
-            let currentData = savedData ? JSON.parse(savedData) : null;
-            
-            seatLayout.forEach((row, rowIndex) => {
+            seatLayout.forEach(row => {
                 const tr = document.createElement('tr');
-                row.forEach((cell, colIndex) => {
+                row.forEach(cell => {
                     const td = document.createElement('td');
                     if (cell === null) {
                         td.className = 'empty';
@@ -107,14 +102,11 @@
                         td.className = 'teacher';
                         td.textContent = cell;
                     } else {
-                        // 如果有保存的数据，使用保存的值，否则使用初始值
-                        const savedValue = currentData ? currentData[rowIndex][colIndex] : cell;
-                        td.textContent = savedValue;
+                        td.textContent = cell;
                         td.addEventListener('click', function() {
                             const newNum = prompt("输入新号码 (1-47):", this.textContent);
                             if (newNum !== null && newNum !== "" && !isNaN(newNum)) {
                                 this.textContent = newNum;
-                                saveCurrentState(); // 保存修改
                             }
                         });
                     }
@@ -122,30 +114,6 @@
                 });
                 table.appendChild(tr);
             });
-        }
-
-        // 保存当前状态到localStorage
-        function saveCurrentState() {
-            const table = document.getElementById('seatTable');
-            const rows = table.querySelectorAll('tr');
-            const currentData = [];
-            
-            rows.forEach(row => {
-                const rowData = [];
-                const cells = row.querySelectorAll('td');
-                cells.forEach(cell => {
-                    if (cell.classList.contains('teacher')) {
-                        rowData.push("教师的座位");
-                    } else if (cell.classList.contains('empty')) {
-                        rowData.push(null);
-                    } else {
-                        rowData.push(cell.textContent);
-                    }
-                });
-                currentData.push(rowData);
-            });
-            
-            localStorage.setItem('seatTableData', JSON.stringify(currentData));
         }
 
         // 随机分配座位
@@ -157,16 +125,6 @@
             seats.forEach((seat, index) => {
                 seat.textContent = numbers[index];
             });
-            
-            saveCurrentState(); // 保存随机分配结果
-        }
-
-        // 重置座位表
-        function resetTable() {
-            if (confirm('确定要重置座位表吗？所有更改将丢失。')) {
-                localStorage.removeItem('seatTableData');
-                initializeTable();
-            }
         }
 
         // 导出为PNG
@@ -175,7 +133,7 @@
             
             html2canvas(table, {
                 backgroundColor: '#FFFFFF',
-                scale: 2
+                scale: 2 // 提高导出质量
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = '座位表.png';
@@ -188,7 +146,6 @@
         initializeTable();
         document.getElementById('randomizeBtn').addEventListener('click', randomizeSeats);
         document.getElementById('exportBtn').addEventListener('click', exportToPNG);
-        document.getElementById('resetBtn').addEventListener('click', resetTable);
     </script>
 </body>
 </html>
