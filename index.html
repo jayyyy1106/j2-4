@@ -121,7 +121,6 @@
             const table = document.getElementById('seatTable');
             table.innerHTML = '';
             
-            // 尝试从localStorage加载保存的数据
             const savedData = localStorage.getItem('seatTableData');
             let currentData = savedData ? JSON.parse(savedData) : null;
             
@@ -131,18 +130,13 @@
                     const td = document.createElement('td');
                     if (cell === null) {
                         td.className = 'empty';
-                    } else if (cell === "教师") {
-                        td.className = 'teacher';
-                        td.textContent = cell;
-                    } else if (cell === "的座位") {
+                    } else if (cell === "教师" || cell === "的座位") {
                         td.className = 'teacher';
                         td.textContent = cell;
                     } else {
-                        // 如果有保存的数据，使用保存的值，否则使用初始值
                         const savedValue = currentData ? currentData[rowIndex][colIndex] : cell;
                         const studentNum = parseInt(savedValue);
                         
-                        // 创建包含学号和姓名的div
                         const studentDiv = document.createElement('div');
                         studentDiv.className = 'student-info';
                         
@@ -163,20 +157,9 @@
                             if (newNum !== null && newNum !== "" && !isNaN(newNum)) {
                                 const num = parseInt(newNum);
                                 if (num >= 1 && num <= 47) {
-                                    // 检查配对要求
-                                    if ((num === 2 || num === 30) && !checkPair(num === 2 ? 30 : 2, this)) {
-                                        alert("学生2和30应该坐在一起");
-                                        return;
-                                    }
-                                    if ((num === 4 || num === 42) && !checkPair(num === 4 ? 42 : 4, this)) {
-                                        alert("学生4和42必须坐在一起");
-                                        return;
-                                    }
-                                    
-                                    // 更新显示
                                     numberSpan.textContent = num;
                                     nameSpan.textContent = studentNames[num] || '';
-                                    saveCurrentState(); // 保存修改
+                                    saveCurrentState();
                                 } else {
                                     alert("请输入1-47之间的有效数字");
                                 }
@@ -189,74 +172,7 @@
             });
         }
 
-        // 检查配对学生是否相邻
-        function checkPair(pairNum, currentCell) {
-            const table = document.getElementById('seatTable');
-            const rows = table.querySelectorAll('tr');
-            const currentTd = currentCell.closest('td');
-            
-            // 找到当前单元格的位置
-            let currentRow = -1, currentCol = -1;
-            rows.forEach((row, rowIndex) => {
-                const cells = row.querySelectorAll('td');
-                cells.forEach((cell, colIndex) => {
-                    if (cell === currentTd) {
-                        currentRow = rowIndex;
-                        currentCol = colIndex;
-                    }
-                });
-            });
-            
-            if (currentRow === -1 || currentCol === -1) return false;
-            
-            // 检查相邻单元格
-            const directions = [
-                [-1, 0], [1, 0], [0, -1], [0, 1] // 上、下、左、右
-            ];
-            
-            for (const [dr, dc] of directions) {
-                const newRow = currentRow + dr;
-                const newCol = currentCol + dc;
-                
-                if (newRow >= 0 && newRow < rows.length && 
-                    newCol >= 0 && newCol < rows[newRow].querySelectorAll('td').length) {
-                    const adjacentCell = rows[newRow].querySelectorAll('td')[newCol];
-                    const numberSpan = adjacentCell.querySelector('.student-number');
-                    if (numberSpan && parseInt(numberSpan.textContent) === pairNum) {
-                        return true;
-                    }
-                }
-            }
-            
-            return false;
-        }
-
-        // 保存当前状态到localStorage
-        function saveCurrentState() {
-            const table = document.getElementById('seatTable');
-            const rows = table.querySelectorAll('tr');
-            const currentData = [];
-            
-            rows.forEach(row => {
-                const rowData = [];
-                const cells = row.querySelectorAll('td');
-                cells.forEach(cell => {
-                    if (cell.classList.contains('teacher')) {
-                        rowData.push(cell.textContent === "教师" ? "教师" : "的座位");
-                    } else if (cell.classList.contains('empty')) {
-                        rowData.push(null);
-                    } else {
-                        const numberSpan = cell.querySelector('.student-number');
-                        rowData.push(numberSpan ? numberSpan.textContent : "");
-                    }
-                });
-                currentData.push(rowData);
-            });
-            
-            localStorage.setItem('seatTableData', JSON.stringify(currentData));
-        }
-
-        // 随机分配座位（带有概率性配对）
+        // 随机分配座位（带有配对逻辑）
         function randomizeSeats() {
             const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
             let numbers = Array.from({length: 47}, (_, i) => i + 1);
@@ -268,26 +184,43 @@
             // 随机打乱常规学生
             regularNumbers.sort(() => Math.random() - 0.5);
             
-            // 处理配对1 (2和30) - 80%概率坐在一起
-            const pair1Together = Math.random() < 0.7;
-            let pair1 = [2, 30];
-            if (!pair1Together) {
-                pair1 = pair1.sort(() => Math.random() - 0.5);
-            }
+            // 决定配对关系
+            const pair4_42 = Math.random() < 0.98; // 98% chance
+            const pair2_30 = Math.random() < 0.7;  // 70% chance
+            const pair30_42 = !pair4_42 && Math.random() < 0.15; // 15% chance (only if 4+42 not paired)
             
-            // 处理配对2 (4和42) - 99.99%概率坐在一起
-            const pair2Together = Math.random() < 0.8;
-            let pair2 = [4, 42];
-            if (!pair2Together) {
-                pair2 = pair2.sort(() => Math.random() - 0.5);
+            // 处理配对
+            let pairedGroups = [];
+            
+            if (pair4_42) {
+                pairedGroups.push([4, 42]); // Highest priority
+                if (pair2_30) pairedGroups.push([2, 30]);
+            } 
+            else if (pair30_42) {
+                pairedGroups.push([30, 42]); // Second priority
+                pairedGroups.push([2]); // 2 will be alone
+            }
+            else if (pair2_30) {
+                pairedGroups.push([2, 30]); // Regular 2+30 pairing
+                pairedGroups.push([4], [42]); // 4 and 42 will be separate
+            }
+            else {
+                // No pairings - all separate
+                pairedGroups.push([2], [30], [4], [42]);
             }
             
             // 合并所有学生
-            numbers = [...regularNumbers, ...pair1, ...pair2];
+            let allNumbers = [...regularNumbers];
+            pairedGroups.forEach(group => {
+                allNumbers = allNumbers.concat(group);
+            });
+            
+            // 随机打乱所有座位
+            const shuffledSeats = [...seats].sort(() => Math.random() - 0.5);
             
             // 分配座位
-            seats.forEach((seat, index) => {
-                const studentNum = numbers[index];
+            shuffledSeats.forEach((seat, index) => {
+                const studentNum = allNumbers[index];
                 const numberSpan = seat.querySelector('.student-number');
                 const nameSpan = seat.querySelector('.student-name');
                 
@@ -297,11 +230,12 @@
                 }
             });
             
-            // 确保配对学生坐在一起（根据概率）
-            if (pair1Together) enforcePairing(2, 30);
-            if (pair2Together) enforcePairing(4, 42);
+            // 确保配对学生坐在一起
+            if (pair4_42) enforcePairing(4, 42);
+            if (pair2_30 && !pair30_42) enforcePairing(2, 30);
+            if (pair30_42) enforcePairing(30, 42);
             
-            saveCurrentState(); // 保存随机分配结果
+            saveCurrentState();
         }
 
         // 确保特定配对学生坐在一起
@@ -350,11 +284,8 @@
             function fixPairing(seat1, seat2, num1, num2) {
                 // 尝试为第一个学生找到相邻位置
                 const pos1 = getPosition(seat1);
-                const directions = [
-                    [-1, 0], [1, 0], [0, -1], [0, 1] // 上、下、左、右
-                ];
+                const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]; // 上、下、左、右
                 
-                // 首先尝试移动第二个学生到第一个学生旁边
                 for (const [dr, dc] of directions) {
                     const newRow = pos1.row + dr;
                     const newCol = pos1.col + dc;
@@ -364,47 +295,16 @@
                         
                         const adjacentCell = table.querySelectorAll('tr')[newRow].querySelectorAll('td')[newCol];
                         
-                        // 如果是空位，直接移动
                         if (adjacentCell.classList.contains('empty')) {
                             swapStudents(seat2, adjacentCell);
                             return;
                         }
                         
-                        // 如果是其他学生，检查是否可以交换
                         const numberSpan = adjacentCell.querySelector('.student-number');
                         if (numberSpan) {
                             const num = parseInt(numberSpan.textContent);
                             if (num !== num1 && num !== num2) {
                                 swapStudents(seat2, adjacentCell);
-                                return;
-                            }
-                        }
-                    }
-                }
-                
-                // 如果无法移动第二个学生，尝试移动第一个学生
-                const pos2 = getPosition(seat2);
-                for (const [dr, dc] of directions) {
-                    const newRow = pos2.row + dr;
-                    const newCol = pos2.col + dc;
-                    
-                    if (newRow >= 0 && newRow < table.querySelectorAll('tr').length && 
-                        newCol >= 0 && newCol < table.querySelectorAll('tr')[newRow].querySelectorAll('td').length) {
-                        
-                        const adjacentCell = table.querySelectorAll('tr')[newRow].querySelectorAll('td')[newCol];
-                        
-                        // 如果是空位，直接移动
-                        if (adjacentCell.classList.contains('empty')) {
-                            swapStudents(seat1, adjacentCell);
-                            return;
-                        }
-                        
-                        // 如果是其他学生，检查是否可以交换
-                        const numberSpan = adjacentCell.querySelector('.student-number');
-                        if (numberSpan) {
-                            const num = parseInt(numberSpan.textContent);
-                            if (num !== num1 && num !== num2) {
-                                swapStudents(seat1, adjacentCell);
                                 return;
                             }
                         }
@@ -442,6 +342,31 @@
                     }
                 }
             }
+        }
+
+        // 保存当前状态到localStorage
+        function saveCurrentState() {
+            const table = document.getElementById('seatTable');
+            const rows = table.querySelectorAll('tr');
+            const currentData = [];
+            
+            rows.forEach(row => {
+                const rowData = [];
+                const cells = row.querySelectorAll('td');
+                cells.forEach(cell => {
+                    if (cell.classList.contains('teacher')) {
+                        rowData.push(cell.textContent);
+                    } else if (cell.classList.contains('empty')) {
+                        rowData.push(null);
+                    } else {
+                        const numberSpan = cell.querySelector('.student-number');
+                        rowData.push(numberSpan ? numberSpan.textContent : "");
+                    }
+                });
+                currentData.push(rowData);
+            });
+            
+            localStorage.setItem('seatTableData', JSON.stringify(currentData));
         }
 
         // 重置座位表
