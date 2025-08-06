@@ -165,7 +165,7 @@
                                 if (num >= 1 && num <= 47) {
                                     // 检查配对要求
                                     if ((num === 2 || num === 30) && !checkPair(num === 2 ? 30 : 2, this)) {
-                                        alert("学生2和30必须坐在一起");
+                                        alert("学生2和30应该坐在一起");
                                         return;
                                     }
                                     if ((num === 4 || num === 42) && !checkPair(num === 4 ? 42 : 4, this)) {
@@ -256,7 +256,7 @@
             localStorage.setItem('seatTableData', JSON.stringify(currentData));
         }
 
-        // 随机分配座位（确保配对要求）
+        // 随机分配座位（带有概率性配对）
         function randomizeSeats() {
             const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
             let numbers = Array.from({length: 47}, (_, i) => i + 1);
@@ -268,9 +268,19 @@
             // 随机打乱常规学生
             regularNumbers.sort(() => Math.random() - 0.5);
             
-            // 随机打乱配对学生
-            const pair1 = [2, 30].sort(() => Math.random() - 0.5);
-            const pair2 = [4, 42].sort(() => Math.random() - 0.5);
+            // 处理配对1 (2和30) - 80%概率坐在一起
+            const pair1Together = Math.random() < 0.7;
+            let pair1 = [2, 30];
+            if (!pair1Together) {
+                pair1 = pair1.sort(() => Math.random() - 0.5);
+            }
+            
+            // 处理配对2 (4和42) - 99.99%概率坐在一起
+            const pair2Together = Math.random() < 0.8;
+            let pair2 = [4, 42];
+            if (!pair2Together) {
+                pair2 = pair2.sort(() => Math.random() - 0.5);
+            }
             
             // 合并所有学生
             numbers = [...regularNumbers, ...pair1, ...pair2];
@@ -287,29 +297,23 @@
                 }
             });
             
-            // 确保配对学生坐在一起
-            enforcePairing();
+            // 确保配对学生坐在一起（根据概率）
+            if (pair1Together) enforcePairing(2, 30);
+            if (pair2Together) enforcePairing(4, 42);
             
             saveCurrentState(); // 保存随机分配结果
         }
 
-        // 确保配对学生坐在一起
-        function enforcePairing() {
+        // 确保特定配对学生坐在一起
+        function enforcePairing(num1, num2) {
             const table = document.getElementById('seatTable');
             const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
             
-            // 检查并修复2和30的配对
-            const student2 = findStudentSeat(2);
-            const student30 = findStudentSeat(30);
-            if (student2 && student30 && !areAdjacent(student2, student30)) {
-                fixPairing(student2, student30);
-            }
+            const student1 = findStudentSeat(num1);
+            const student2 = findStudentSeat(num2);
             
-            // 检查并修复4和42的配对
-            const student4 = findStudentSeat(4);
-            const student42 = findStudentSeat(42);
-            if (student4 && student42 && !areAdjacent(student4, student42)) {
-                fixPairing(student4, student42);
+            if (student1 && student2 && !areAdjacent(student1, student2)) {
+                fixPairing(student1, student2, num1, num2);
             }
             
             function findStudentSeat(num) {
@@ -343,13 +347,14 @@
                 return { row: -1, col: -1 };
             }
             
-            function fixPairing(seat1, seat2) {
-                // 找到seat1的相邻空位或可交换的座位
+            function fixPairing(seat1, seat2, num1, num2) {
+                // 尝试为第一个学生找到相邻位置
                 const pos1 = getPosition(seat1);
                 const directions = [
                     [-1, 0], [1, 0], [0, -1], [0, 1] // 上、下、左、右
                 ];
                 
+                // 首先尝试移动第二个学生到第一个学生旁边
                 for (const [dr, dc] of directions) {
                     const newRow = pos1.row + dr;
                     const newCol = pos1.col + dc;
@@ -369,8 +374,37 @@
                         const numberSpan = adjacentCell.querySelector('.student-number');
                         if (numberSpan) {
                             const num = parseInt(numberSpan.textContent);
-                            if (![2, 30, 4, 42].includes(num)) {
+                            if (num !== num1 && num !== num2) {
                                 swapStudents(seat2, adjacentCell);
+                                return;
+                            }
+                        }
+                    }
+                }
+                
+                // 如果无法移动第二个学生，尝试移动第一个学生
+                const pos2 = getPosition(seat2);
+                for (const [dr, dc] of directions) {
+                    const newRow = pos2.row + dr;
+                    const newCol = pos2.col + dc;
+                    
+                    if (newRow >= 0 && newRow < table.querySelectorAll('tr').length && 
+                        newCol >= 0 && newCol < table.querySelectorAll('tr')[newRow].querySelectorAll('td').length) {
+                        
+                        const adjacentCell = table.querySelectorAll('tr')[newRow].querySelectorAll('td')[newCol];
+                        
+                        // 如果是空位，直接移动
+                        if (adjacentCell.classList.contains('empty')) {
+                            swapStudents(seat1, adjacentCell);
+                            return;
+                        }
+                        
+                        // 如果是其他学生，检查是否可以交换
+                        const numberSpan = adjacentCell.querySelector('.student-number');
+                        if (numberSpan) {
+                            const num = parseInt(numberSpan.textContent);
+                            if (num !== num1 && num !== num2) {
+                                swapStudents(seat1, adjacentCell);
                                 return;
                             }
                         }
@@ -397,8 +431,11 @@
                         nameSpan2.textContent = tempName;
                     } else {
                         // 移动学生到空位
-                        numberSpan2.textContent = numberSpan1.textContent;
-                        nameSpan2.textContent = nameSpan1.textContent;
+                        const num = numberSpan1.textContent;
+                        const name = nameSpan1.textContent;
+                        
+                        numberSpan2.textContent = num;
+                        nameSpan2.textContent = name;
                         
                         numberSpan1.textContent = '';
                         nameSpan1.textContent = '';
