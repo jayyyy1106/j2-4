@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>初二4 座位表</title>
     <style>
         body {
@@ -12,7 +12,7 @@
         }
         h1 {
             text-align: center;
-            font-size: 20px;
+            font-size: 24px;
             margin-bottom: 15px;
         }
         table {
@@ -21,8 +21,8 @@
             border: 2px solid #000000;
         }
         td {
-            width: 70px;
-            height: 35px;
+            width: 100px;
+            height: 50px;
             border: 1px solid #d0d0d0;
             text-align: center;
             vertical-align: middle;
@@ -60,7 +60,7 @@
     </style>
 </head>
 <body>
-    <h1>座位表</h1>
+    <h1>初二4 座位表</h1>
     <div class="button-container">
         <button id="randomizeBtn">Randomize 随机分配</button>
         <button id="exportBtn">Save As PNG 保存为PNG</button>
@@ -70,7 +70,14 @@
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-        // 根据提供的Excel布局初始化座位
+        const studentNames = [
+            "", "邱穆芸", "陈妍希", "张芷欣", "杨时瑜", "颜姿彤", "许亦萱", "陈嘉恩", "陈钏宁", "李静恩", "刘瑞恩",
+            "黄禹嫣", "妮娅", "陈姿卉", "何汶宣", "王歆茹", "潘姿颖", "施凯馨", "陈渝恩", "戴湘霖", "王婧涵", "许悦影", 
+            "朱俊绅", "陈毅祥", "谢承邑", "张智勇", "何凯旭", "赖家禾", "江致承", "刘俊祥", "卢隽益", "廖炫鑫", 
+            "刘宽辅", "卢裕城", "黄康桀", "伍思源", "彭宇乐", "潘家扬", "陈晋佑", "陈有权", "余根权", "黄凯杰", 
+            "黄恩杰", "黄俊熹", "黄明杰", "叶峻睿", "叶礼诚", "杨仁喆"
+        ];
+
         const seatLayout = [
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -88,36 +95,31 @@
             [null, null, null, null, null, null, "教师", "的座位", null, null, null, null, null, null]
         ];
 
-        // 初始化表格
         function initializeTable() {
             const table = document.getElementById('seatTable');
             table.innerHTML = '';
-            
-            // 尝试从localStorage加载保存的数据
             const savedData = localStorage.getItem('seatTableData');
             let currentData = savedData ? JSON.parse(savedData) : null;
-            
+
             seatLayout.forEach((row, rowIndex) => {
                 const tr = document.createElement('tr');
                 row.forEach((cell, colIndex) => {
                     const td = document.createElement('td');
                     if (cell === null) {
                         td.className = 'empty';
-                    } else if (cell === "教师") {
-                        td.className = 'teacher';
-                        td.textContent = cell;
-                    } else if (cell === "的座位") {
+                    } else if (cell === "教师" || cell === "的座位") {
                         td.className = 'teacher';
                         td.textContent = cell;
                     } else {
-                        // 如果有保存的数据，使用保存的值，否则使用初始值
-                        const savedValue = currentData ? currentData[rowIndex][colIndex] : cell;
-                        td.textContent = savedValue;
-                        td.addEventListener('click', function() {
-                            const newNum = prompt("输入新号码 (1-47):", this.textContent);
-                            if (newNum !== null && newNum !== "" && !isNaN(newNum)) {
-                                this.textContent = newNum;
-                                saveCurrentState(); // 保存修改
+                        const seatNumber = currentData ? currentData[rowIndex][colIndex] : cell;
+                        td.textContent = studentNames[parseInt(seatNumber)] || "";
+                        td.dataset.number = seatNumber;
+                        td.addEventListener('click', function () {
+                            const newNum = prompt("输入新号码 (1-47):", this.dataset.number);
+                            if (newNum !== null && !isNaN(newNum) && +newNum >= 1 && +newNum <= 47) {
+                                this.dataset.number = newNum;
+                                this.textContent = studentNames[parseInt(newNum)];
+                                saveCurrentState();
                             }
                         });
                     }
@@ -127,87 +129,96 @@
             });
         }
 
-        // 保存当前状态到localStorage
         function saveCurrentState() {
             const table = document.getElementById('seatTable');
             const rows = table.querySelectorAll('tr');
             const currentData = [];
-            
+
             rows.forEach(row => {
                 const rowData = [];
                 const cells = row.querySelectorAll('td');
                 cells.forEach(cell => {
                     if (cell.classList.contains('teacher')) {
-                        rowData.push("教师的座位");
+                        rowData.push(cell.textContent);
                     } else if (cell.classList.contains('empty')) {
                         rowData.push(null);
                     } else {
-                        rowData.push(cell.textContent);
+                        rowData.push(cell.dataset.number);
                     }
                 });
                 currentData.push(rowData);
             });
-            
+
             localStorage.setItem('seatTableData', JSON.stringify(currentData));
         }
 
-        // 随机分配座位（带42和4配对逻辑）
         function randomizeSeats() {
             const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
-            let numbers = Array.from({length: 47}, (_, i) => i + 1);
-            
-            // 99% chance to pair 42 and 4 together
-            if (Math.random() < 0.99) {
-                // Remove 42 and 4 from the numbers array
-                numbers = numbers.filter(n => n !== 42 && n !== 4);
-                
-                // Shuffle the remaining numbers
-                numbers = numbers.sort(() => Math.random() - 0.5);
-                
-                // Find two adjacent seats
-                const adjacentPairs = [];
-                for (let i = 0; i < seats.length - 1; i++) {
-                    const currentRow = seats[i].parentNode.rowIndex;
-                    const nextRow = seats[i+1].parentNode.rowIndex;
-                    if (currentRow === nextRow) { // Same row
-                        adjacentPairs.push([i, i+1]);
-                    }
-                }
-                
-                if (adjacentPairs.length > 0) {
-                    // Randomly select one adjacent pair
-                    const randomPair = adjacentPairs[Math.floor(Math.random() * adjacentPairs.length)];
-                    
-                    // Put 42 and 4 in these seats
-                    seats[randomPair[0]].textContent = Math.random() < 0.5 ? 42 : 4;
-                    seats[randomPair[1]].textContent = seats[randomPair[0]].textContent === 42 ? 4 : 42;
-                    
-                    // Fill the remaining seats
-                    let numIndex = 0;
-                    for (let i = 0; i < seats.length; i++) {
-                        if (i !== randomPair[0] && i !== randomPair[1]) {
-                            seats[i].textContent = numbers[numIndex++];
-                        }
-                    }
+            let numbers = Array.from({ length: 47 }, (_, i) => i + 1);
+            const adjacentPairs = findAdjacentSeatPairs(seats);
+
+            if (adjacentPairs.length >= 2) {
+                numbers = numbers.filter(n => ![42, 4, 2, 30].includes(n));
+                numbers.sort(() => Math.random() - 0.5);
+                const [pair1, pair2] = adjacentPairs.sort(() => Math.random() - 0.5).slice(0, 2);
+
+                if (Math.random() < 0.5) {
+                    assignPair(seats, pair1, [42, 4]);
+                    assignPair(seats, pair2, [2, 30]);
                 } else {
-                    // Fallback if no adjacent seats found
-                    numbers = numbers.concat([42, 4]).sort(() => Math.random() - 0.5);
-                    seats.forEach((seat, index) => {
-                        seat.textContent = numbers[index];
-                    });
+                    assignPair(seats, pair1, [2, 30]);
+                    assignPair(seats, pair2, [42, 4]);
+                }
+
+                let idx = 0;
+                for (let i = 0; i < seats.length; i++) {
+                    if (![...pair1, ...pair2].includes(i)) {
+                        const num = numbers[idx++];
+                        seats[i].dataset.number = num;
+                        seats[i].textContent = studentNames[num];
+                    }
                 }
             } else {
-                // 1% chance regular random
-                numbers = numbers.sort(() => Math.random() - 0.5);
-                seats.forEach((seat, index) => {
-                    seat.textContent = numbers[index];
+                numbers.sort(() => Math.random() - 0.5);
+                seats.forEach((seat, i) => {
+                    seat.dataset.number = numbers[i];
+                    seat.textContent = studentNames[numbers[i]];
                 });
             }
-            
-            saveCurrentState(); // 保存随机分配结果
+
+            saveCurrentState();
         }
 
-        // 重置座位表
+        function assignPair(seats, pair, nums) {
+            seats[pair[0]].dataset.number = nums[0];
+            seats[pair[0]].textContent = studentNames[nums[0]];
+            seats[pair[1]].dataset.number = nums[1];
+            seats[pair[1]].textContent = studentNames[nums[1]];
+        }
+
+        function findAdjacentSeatPairs(seats) {
+            const table = document.getElementById('seatTable');
+            const pairs = [];
+            const seatPos = new Map();
+            seats.forEach((seat, idx) => {
+                const row = seat.parentNode.rowIndex;
+                const col = Array.from(seat.parentNode.cells).indexOf(seat);
+                seatPos.set(idx, { row, col });
+            });
+
+            for (let i = 0; i < seats.length; i++) {
+                for (let j = i + 1; j < seats.length; j++) {
+                    const pos1 = seatPos.get(i), pos2 = seatPos.get(j);
+                    if ((Math.abs(pos1.row - pos2.row) === 1 && pos1.col === pos2.col) ||
+                        (Math.abs(pos1.col - pos2.col) === 1 && pos1.row === pos2.row)) {
+                        pairs.push([i, j]);
+                    }
+                }
+            }
+
+            return pairs;
+        }
+
         function resetTable() {
             if (confirm('确定要重置座位表吗？所有更改将丢失。')) {
                 localStorage.removeItem('seatTableData');
@@ -215,10 +226,8 @@
             }
         }
 
-        // 导出为PNG
         function exportToPNG() {
             const table = document.getElementById('seatTable');
-            
             html2canvas(table, {
                 backgroundColor: '#FFFFFF',
                 scale: 2
@@ -230,7 +239,6 @@
             });
         }
 
-        // 初始化页面
         initializeTable();
         document.getElementById('randomizeBtn').addEventListener('click', randomizeSeats);
         document.getElementById('exportBtn').addEventListener('click', exportToPNG);
