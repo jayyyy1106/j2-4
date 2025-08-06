@@ -70,6 +70,14 @@
         button:hover {
             background-color: #e6e6e6;
         }
+        
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -81,9 +89,14 @@
     </div>
     <table id="seatTable"></table>
 
+    
+    <footer>
+        &copy; <span id="year"></span> GitHub| Jay
+    </footer>
+
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-        // 学生名单
+        
         const studentNames = [
             "", // 0索引不使用
             "邱穆芸", "陈妍希", "张芷欣", "杨时瑜", "颜姿彤", 
@@ -98,7 +111,7 @@
             "叶礼诚", "杨仁喆"
         ];
 
-        // 根据提供的Excel布局初始化座位
+        
         const seatLayout = [
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -116,12 +129,12 @@
             [null, null, null, null, null, null, "教师", "的座位", null, null, null, null, null, null]
         ];
 
-        // 初始化表格
+        
         function initializeTable() {
             const table = document.getElementById('seatTable');
             table.innerHTML = '';
             
-            // 尝试从localStorage加载保存的数据
+            
             const savedData = localStorage.getItem('seatTableData');
             let currentData = savedData ? JSON.parse(savedData) : null;
             
@@ -142,7 +155,7 @@
                         const savedValue = currentData ? currentData[rowIndex][colIndex] : cell;
                         const studentNum = parseInt(savedValue);
                         
-                        // 创建包含学号和姓名的div
+                        
                         const studentDiv = document.createElement('div');
                         studentDiv.className = 'student-info';
                         
@@ -163,7 +176,7 @@
                             if (newNum !== null && newNum !== "" && !isNaN(newNum)) {
                                 const num = parseInt(newNum);
                                 if (num >= 1 && num <= 47) {
-                                    // 检查配对要求
+                                    
                                     if ((num === 2 || num === 30) && !checkPair(num === 2 ? 30 : 2, this)) {
                                         alert("学生2和30必须坐在一起");
                                         return;
@@ -173,10 +186,10 @@
                                         return;
                                     }
                                     
-                                    // 更新显示
+                                    
                                     numberSpan.textContent = num;
                                     nameSpan.textContent = studentNames[num] || '';
-                                    saveCurrentState(); // 保存修改
+                                    saveCurrentState(); 
                                 } else {
                                     alert("请输入1-47之间的有效数字");
                                 }
@@ -189,13 +202,13 @@
             });
         }
 
-        // 检查配对学生是否相邻
+    
         function checkPair(pairNum, currentCell) {
             const table = document.getElementById('seatTable');
             const rows = table.querySelectorAll('tr');
             const currentTd = currentCell.closest('td');
             
-            // 找到当前单元格的位置
+            
             let currentRow = -1, currentCol = -1;
             rows.forEach((row, rowIndex) => {
                 const cells = row.querySelectorAll('td');
@@ -209,7 +222,7 @@
             
             if (currentRow === -1 || currentCol === -1) return false;
             
-            // 检查相邻单元格
+            
             const directions = [
                 [-1, 0], [1, 0], [0, -1], [0, 1] // 上、下、左、右
             ];
@@ -231,7 +244,7 @@
             return false;
         }
 
-        // 保存当前状态到localStorage
+    
         function saveCurrentState() {
             const table = document.getElementById('seatTable');
             const rows = table.querySelectorAll('tr');
@@ -256,26 +269,26 @@
             localStorage.setItem('seatTableData', JSON.stringify(currentData));
         }
 
-        // 随机分配座位（确保配对要求）
+    
         function randomizeSeats() {
             const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
             let numbers = Array.from({length: 47}, (_, i) => i + 1);
             
-            // 先移除需要配对的学生
+            
             const pairedNumbers = [2, 30, 4, 42];
             const regularNumbers = numbers.filter(n => !pairedNumbers.includes(n));
             
-            // 随机打乱常规学生
+        
             regularNumbers.sort(() => Math.random() - 0.5);
             
-            // 随机打乱配对学生
+            
             const pair1 = [2, 30].sort(() => Math.random() - 0.5);
             const pair2 = [4, 42].sort(() => Math.random() - 0.5);
             
-            // 合并所有学生
+        
             numbers = [...regularNumbers, ...pair1, ...pair2];
             
-            // 分配座位
+            
             seats.forEach((seat, index) => {
                 const studentNum = numbers[index];
                 const numberSpan = seat.querySelector('.student-number');
@@ -287,25 +300,25 @@
                 }
             });
             
-            // 确保配对学生坐在一起
+            
             enforcePairing();
             
-            saveCurrentState(); // 保存随机分配结果
+            saveCurrentState(); 
         }
 
-        // 确保配对学生坐在一起
+        
         function enforcePairing() {
             const table = document.getElementById('seatTable');
             const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
             
-            // 检查并修复2和30的配对
+    
             const student2 = findStudentSeat(2);
             const student30 = findStudentSeat(30);
             if (student2 && student30 && !areAdjacent(student2, student30)) {
                 fixPairing(student2, student30);
             }
             
-            // 检查并修复4和42的配对
+            
             const student4 = findStudentSeat(4);
             const student42 = findStudentSeat(42);
             if (student4 && student42 && !areAdjacent(student4, student42)) {
@@ -344,7 +357,7 @@
             }
             
             function fixPairing(seat1, seat2) {
-                // 找到seat1的相邻空位或可交换的座位
+                
                 const pos1 = getPosition(seat1);
                 const directions = [
                     [-1, 0], [1, 0], [0, -1], [0, 1] // 上、下、左、右
@@ -359,13 +372,13 @@
                         
                         const adjacentCell = table.querySelectorAll('tr')[newRow].querySelectorAll('td')[newCol];
                         
-                        // 如果是空位，直接移动
+                        
                         if (adjacentCell.classList.contains('empty')) {
                             swapStudents(seat2, adjacentCell);
                             return;
                         }
                         
-                        // 如果是其他学生，检查是否可以交换
+                        
                         const numberSpan = adjacentCell.querySelector('.student-number');
                         if (numberSpan) {
                             const num = parseInt(numberSpan.textContent);
@@ -429,12 +442,15 @@
                 link.click();
             });
         }
-
+    
         // 初始化页面
         initializeTable();
         document.getElementById('randomizeBtn').addEventListener('click', randomizeSeats);
         document.getElementById('exportBtn').addEventListener('click', exportToPNG);
         document.getElementById('resetBtn').addEventListener('click', resetTable);
+        
+        // 设置当前年份
+        document.getElementById('year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>
