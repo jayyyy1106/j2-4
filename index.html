@@ -98,7 +98,7 @@
             "叶礼诚", "杨仁喆"
         ];
 
-        // 根据提供的Excel布局初始化座位
+        // 修正后的座位布局（移除了重复的"40"）
         const seatLayout = [
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -112,7 +112,7 @@
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
             ["11", "20", null, "33", "43", null, "42", "30", null, "2", "10", null, "28", "45"],
             [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            ["36", "25", null, "47", "44", null, "26", "39", null, "40", "27", null, "23", "40"],
+            ["36", "25", null, "47", "44", null, "26", "39", null, "40", "27", null, "23", "3"],
             [null, null, null, null, null, null, "教师", "的座位", null, null, null, null, null, null]
         ];
 
@@ -269,14 +269,14 @@
             regularNumbers.sort(() => Math.random() - 0.5);
             
             // 处理配对1 (2和30) - 80%概率坐在一起
-            const pair1Together = Math.random() < 0.7;
+            const pair1Together = Math.random() < 0.8;
             let pair1 = [2, 30];
             if (!pair1Together) {
                 pair1 = pair1.sort(() => Math.random() - 0.5);
             }
             
             // 处理配对2 (4和42) - 99.99%概率坐在一起
-            const pair2Together = Math.random() < 0.8;
+            const pair2Together = Math.random() < 0.9999;
             let pair2 = [4, 42];
             if (!pair2Together) {
                 pair2 = pair2.sort(() => Math.random() - 0.5);
