@@ -18,7 +18,7 @@
     table {
       border-collapse: collapse;
       margin: 0 auto;
-      border: 2px solid #d3d3d3;
+      border: 2px solid #000000;
     }
     td {
       width: 100px;
@@ -37,7 +37,7 @@
       border: 1px solid #d0d0d0;
     }
     td.teacher {
-      background-color: #708090;
+      background-color: #f2f2f2;
       font-weight: normal;
     }
     td.student {
@@ -80,7 +80,7 @@
   <table id="seatTable"></table>
 
   <footer>
-    Made with Deepseek AI, ChatGPT  & GitHub
+    Made with Deepseek AI, ChatGPT & GitHub
   </footer>
 
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -126,7 +126,7 @@
             const number = savedData ? parseInt(savedData[rowIndex][colIndex]) : parseInt(cell);
             td.textContent = `${number} ${studentNames[number]}`;
             td.classList.add('student');
-            td.addEventListener('click', function () {
+            td.addEventListener('click', function() {
               const currentNum = parseInt(this.textContent.split(" ")[0]);
               const newNum = prompt("输入新号码 (1-47):", currentNum);
               const parsed = parseInt(newNum);
@@ -170,57 +170,62 @@
       const seats = Array.from(document.querySelectorAll('td.student'));
       const adjacentPairs = findAdjacentSeatPairs(seats);
       
-      // Create a list of all student numbers (1-47)
-      let allNumbers = Array.from({ length: 47 }, (_, i) => i + 1);
+      // Create list of all student numbers (1-47)
+      let availableStudents = Array.from({length: 47}, (_, i) => i + 1);
       
-      // Create groups that should sit together
-      const groups = [];
+      // Create student groups that should sit together
+      const studentGroups = [];
       
-      // Group 1: Always pair 46 and 31
-      groups.push([46, 31]);
-      allNumbers = allNumbers.filter(n => ![46, 31].includes(n));
-      
-      // Group 2: Pair 4 and 42 with 90% probability
-      const shouldPair4_42 = Math.random() < 0.9;
-      if (shouldPair4_42) {
-        groups.push([4, 42]);
-        allNumbers = allNumbers.filter(n => ![4, 42].includes(n));
+      // 1. Always pair 46 and 31
+      if (availableStudents.includes(46) && availableStudents.includes(31)) {
+        studentGroups.push([46, 31]);
+        availableStudents = availableStudents.filter(n => ![46, 31].includes(n));
       }
       
-      // Group 3: Pair 2 and 30 with 75% probability
-      const shouldPair2_30 = Math.random() < 0.75;
-      if (shouldPair2_30) {
-        groups.push([2, 30]);
-        allNumbers = allNumbers.filter(n => ![2, 30].includes(n));
+      // 2. Pair 4 and 42 with 90% probability
+      const pair4_42 = Math.random() < 0.9;
+      if (pair4_42 && availableStudents.includes(4) && availableStudents.includes(42)) {
+        studentGroups.push([4, 42]);
+        availableStudents = availableStudents.filter(n => ![4, 42].includes(n));
       }
       
-      // Shuffle the remaining individual numbers
-      shuffleArray(allNumbers);
+      // 3. Pair 2 and 30 with 75% probability
+      const pair2_30 = Math.random() < 0.75;
+      if (pair2_30 && availableStudents.includes(2) && availableStudents.includes(30)) {
+        studentGroups.push([2, 30]);
+        availableStudents = availableStudents.filter(n => ![2, 30].includes(n));
+      }
       
-      // Combine groups and individual numbers into one list
-      const allStudents = [...groups];
-      allNumbers.forEach(num => allStudents.push([num]));
+      // Add remaining students as individual groups
+      availableStudents.forEach(num => studentGroups.push([num]));
       
-      // Shuffle all student groups (both pairs and individuals)
-      shuffleArray(allStudents);
+      // Shuffle all groups
+      shuffleArray(studentGroups);
       
-      // Assign all students to seats
-      let studentIndex = 0;
+      // Clear all seats
+      seats.forEach(seat => {
+        seat.textContent = '';
+        seat.classList.remove('student');
+      });
+      
+      // Assign groups to seats
+      let groupIndex = 0;
       let seatIndex = 0;
       
-      while (studentIndex < allStudents.length && seatIndex < seats.length) {
-        const currentGroup = allStudents[studentIndex];
+      while (groupIndex < studentGroups.length && seatIndex < seats.length) {
+        const currentGroup = studentGroups[groupIndex];
         
         if (currentGroup.length === 1) {
-          // Single student - assign to next available seat
+          // Single student
           seats[seatIndex].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
+          seats[seatIndex].classList.add('student');
           seatIndex++;
-          studentIndex++;
+          groupIndex++;
         } else {
           // Pair of students - find adjacent seats
           const pairSeats = findAvailableAdjacentSeats(seats, seatIndex, adjacentPairs);
           if (pairSeats) {
-            // Randomize which student goes in which seat of the pair
+            // Randomize order
             if (Math.random() < 0.5) {
               seats[pairSeats[0]].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
               seats[pairSeats[1]].textContent = `${currentGroup[1]} ${studentNames[currentGroup[1]]}`;
@@ -228,18 +233,21 @@
               seats[pairSeats[0]].textContent = `${currentGroup[1]} ${studentNames[currentGroup[1]]}`;
               seats[pairSeats[1]].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
             }
-            studentIndex++;
-            // Skip the next seat since we've assigned a pair
+            seats[pairSeats[0]].classList.add('student');
+            seats[pairSeats[1]].classList.add('student');
+            groupIndex++;
             seatIndex = Math.max(seatIndex, pairSeats[1] + 1);
           } else {
-            // If no adjacent seats found, assign them individually
+            // No adjacent seats - assign individually
             seats[seatIndex].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
+            seats[seatIndex].classList.add('student');
             seatIndex++;
             if (seatIndex < seats.length) {
               seats[seatIndex].textContent = `${currentGroup[1]} ${studentNames[currentGroup[1]]}`;
+              seats[seatIndex].classList.add('student');
               seatIndex++;
             }
-            studentIndex++;
+            groupIndex++;
           }
         }
       }
@@ -248,16 +256,16 @@
     }
 
     function findAvailableAdjacentSeats(seats, startIndex, adjacentPairs) {
-      // Find all adjacent pairs that are after the startIndex
       const availablePairs = adjacentPairs.filter(pair => 
-        pair[0] >= startIndex && pair[1] >= startIndex
+        pair[0] >= startIndex && 
+        pair[1] >= startIndex &&
+        seats[pair[0]].textContent === '' &&
+        seats[pair[1]].textContent === ''
       );
       
-      if (availablePairs.length > 0) {
-        // Return a random available pair
-        return availablePairs[Math.floor(Math.random() * availablePairs.length)];
-      }
-      return null;
+      return availablePairs.length > 0 ? 
+        availablePairs[Math.floor(Math.random() * availablePairs.length)] : 
+        null;
     }
 
     function shuffleArray(array) {
@@ -270,10 +278,11 @@
     function findAdjacentSeatPairs(seats) {
       const pairs = [];
       const seatPos = new Map();
+      
       seats.forEach((seat, idx) => {
         const row = seat.parentNode.rowIndex;
         const col = Array.from(seat.parentNode.cells).indexOf(seat);
-        seatPos.set(idx, { row, col });
+        seatPos.set(idx, {row, col});
       });
 
       for (let i = 0; i < seats.length; i++) {
@@ -309,6 +318,7 @@
       });
     }
 
+    // Initialize
     initializeTable();
     document.getElementById('randomizeBtn').addEventListener('click', randomizeSeats);
     document.getElementById('exportBtn').addEventListener('click', exportToPNG);
