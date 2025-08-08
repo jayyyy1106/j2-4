@@ -168,52 +168,121 @@
 
     function randomizeSeats() {
       const seats = Array.from(document.querySelectorAll('td.student'));
-      let numbers = Array.from({ length: 47 }, (_, i) => i + 1);
       const adjacentPairs = findAdjacentSeatPairs(seats);
-
-      if (adjacentPairs.length >= 2) {
-        numbers = numbers.filter(n => ![42, 4, 2, 30].includes(n));
-        numbers.sort(() => Math.random() - 0.5);
-        const [pair1, pair2] = adjacentPairs.sort(() => Math.random() - 0.5).slice(0, 2);
-
-        if (Math.random() < 0.5) {
-          assignPair(seats, pair1, [42, 4]);
-          assignPair(seats, pair2, [2, 30]);
+      
+      // Create list of all student numbers (1-47)
+      let availableStudents = Array.from({length: 47}, (_, i) => i + 1);
+      
+      // Create student groups that should sit together
+      const studentGroups = [];
+      
+      // 1. Always pair 46 and 31 (100%)
+      if (availableStudents.includes(46) && availableStudents.includes(31)) {
+        studentGroups.push([46, 31]);
+        availableStudents = availableStudents.filter(n => ![46, 31].includes(n));
+      }
+      
+      // 2. Pair 4 and 42 with 90% probability
+      const pair4_42 = Math.random() < 0.9;
+      if (pair4_42 && availableStudents.includes(4) && availableStudents.includes(42)) {
+        studentGroups.push([4, 42]);
+        availableStudents = availableStudents.filter(n => ![4, 42].includes(n));
+      }
+      
+      // 3. Pair 2 and 30 with 75% probability
+      const pair2_30 = Math.random() < 0.75;
+      if (pair2_30 && availableStudents.includes(2) && availableStudents.includes(30)) {
+        studentGroups.push([2, 30]);
+        availableStudents = availableStudents.filter(n => ![2, 30].includes(n));
+      }
+      
+      // Add remaining students as individual groups
+      availableStudents.forEach(num => studentGroups.push([num]));
+      
+      // Shuffle all groups
+      shuffleArray(studentGroups);
+      
+      // Clear all seats
+      seats.forEach(seat => {
+        seat.textContent = '';
+        seat.classList.remove('student');
+      });
+      
+      // Assign groups to seats
+      let groupIndex = 0;
+      let seatIndex = 0;
+      
+      while (groupIndex < studentGroups.length && seatIndex < seats.length) {
+        const currentGroup = studentGroups[groupIndex];
+        
+        if (currentGroup.length === 1) {
+          // Single student
+          seats[seatIndex].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
+          seats[seatIndex].classList.add('student');
+          seatIndex++;
+          groupIndex++;
         } else {
-          assignPair(seats, pair1, [2, 30]);
-          assignPair(seats, pair2, [42, 4]);
-        }
-
-        let idx = 0;
-        for (let i = 0; i < seats.length; i++) {
-          if (![...pair1, ...pair2].includes(i)) {
-            const num = numbers[idx++];
-            seats[i].textContent = `${num} ${studentNames[num]}`;
+          // Pair of students - find adjacent seats
+          const pairSeats = findAvailableAdjacentSeats(seats, seatIndex, adjacentPairs);
+          if (pairSeats) {
+            // Randomize order
+            if (Math.random() < 0.5) {
+              seats[pairSeats[0]].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
+              seats[pairSeats[1]].textContent = `${currentGroup[1]} ${studentNames[currentGroup[1]]}`;
+            } else {
+              seats[pairSeats[0]].textContent = `${currentGroup[1]} ${studentNames[currentGroup[1]]}`;
+              seats[pairSeats[1]].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
+            }
+            seats[pairSeats[0]].classList.add('student');
+            seats[pairSeats[1]].classList.add('student');
+            groupIndex++;
+            seatIndex = Math.max(seatIndex, pairSeats[1] + 1);
+          } else {
+            // No adjacent seats - assign individually
+            seats[seatIndex].textContent = `${currentGroup[0]} ${studentNames[currentGroup[0]]}`;
+            seats[seatIndex].classList.add('student');
+            seatIndex++;
+            if (seatIndex < seats.length) {
+              seats[seatIndex].textContent = `${currentGroup[1]} ${studentNames[currentGroup[1]]}`;
+              seats[seatIndex].classList.add('student');
+              seatIndex++;
+            }
+            groupIndex++;
           }
         }
-      } else {
-        numbers.sort(() => Math.random() - 0.5);
-        seats.forEach((seat, i) => {
-          const num = numbers[i];
-          seat.textContent = `${num} ${studentNames[num]}`;
-        });
       }
 
       saveCurrentState();
     }
 
-    function assignPair(seats, pair, nums) {
-      seats[pair[0]].textContent = `${nums[0]} ${studentNames[nums[0]]}`;
-      seats[pair[1]].textContent = `${nums[1]} ${studentNames[nums[1]]}`;
+    function findAvailableAdjacentSeats(seats, startIndex, adjacentPairs) {
+      const availablePairs = adjacentPairs.filter(pair => 
+        pair[0] >= startIndex && 
+        pair[1] >= startIndex &&
+        seats[pair[0]].textContent === '' &&
+        seats[pair[1]].textContent === ''
+      );
+      
+      return availablePairs.length > 0 ? 
+        availablePairs[Math.floor(Math.random() * availablePairs.length)] : 
+        null;
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
     }
 
     function findAdjacentSeatPairs(seats) {
       const pairs = [];
       const seatPos = new Map();
+      
       seats.forEach((seat, idx) => {
         const row = seat.parentNode.rowIndex;
         const col = Array.from(seat.parentNode.cells).indexOf(seat);
-        seatPos.set(idx, { row, col });
+        seatPos.set(idx, {row, col});
       });
 
       for (let i = 0; i < seats.length; i++) {
@@ -249,6 +318,7 @@
       });
     }
 
+    // Initialize
     initializeTable();
     document.getElementById('randomizeBtn').addEventListener('click', randomizeSeats);
     document.getElementById('exportBtn').addEventListener('click', exportToPNG);
