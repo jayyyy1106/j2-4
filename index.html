@@ -1,194 +1,264 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>座位表 (自动保存)</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: white;
-        }
-        h1 {
-            text-align: center;
-            font-size: 20px;
-            margin-bottom: 15px;
-        }
-        table {
-            border-collapse: collapse;
-            margin: 0 auto;
-            border: 2px solid #000000;
-        }
-        td {
-            width: 70px;
-            height: 35px;
-            border: 1px solid #d0d0d0;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 14px;
-            padding: 0;
-            cursor: pointer;
-            background-color: white;
-        }
-        td.empty {
-            background-color: white;
-            border: 1px solid #d0d0d0;
-        }
-        td.teacher {
-            background-color: #f2f2f2;
-            font-weight: normal;
-        }
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 15px auto;
-        }
-        button {
-            padding: 8px 16px;
-            background-color: #f2f2f2;
-            color: black;
-            border: 1px solid #d0d0d0;
-            border-radius: 2px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        button:hover {
-            background-color: #e6e6e6;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>初二4 座位表</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: white;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 0 auto;
+      border: 2px solid #000000;
+    }
+    td {
+      width: 100px;
+      height: 55px;
+      border: 1px solid #d0d0d0;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 13px;
+      padding: 0;
+      cursor: pointer;
+      background-color: white;
+      white-space: pre-line;
+    }
+    td.empty {
+      background-color: white;
+      border: 1px solid #d0d0d0;
+    }
+    td.teacher {
+      background-color: #f2f2f2;
+      font-weight: normal;
+    }
+    td.student {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px auto;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #f2f2f2;
+      color: black;
+      border: 1px solid #d0d0d0;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #e6e6e6;
+    }
+    footer {
+      text-align: center;
+      font-size: 13px;
+      color: gray;
+      margin-top: 40px;
+    }
+  </style>
 </head>
 <body>
-    <h1>座位表 (自动保存)</h1>
-    <div class="button-container">
-        <button id="randomizeBtn">随机分配</button>
-        <button id="exportBtn">保存为PNG</button>
-        <button id="resetBtn">重置座位表</button>
-    </div>
-    <table id="seatTable"></table>
+  <h1>初二4 座位表（8月）</h1>
+  <div class="button-container">
+    <button id="randomizeBtn">Randomize 随机分配</button>
+    <button id="exportBtn">Save As PNG 保存为PNG</button>
+    <button id="resetBtn">Reset 重置座位表</button>
+  </div>
+  <table id="seatTable"></table>
 
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script>
-        // 根据提供的Excel布局初始化座位
-        const seatLayout = [
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "16", "17", null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "1", "13", null, "18", "22", null, "29", "35", null, "32", "3"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, null, null, null, "5", "34", null, "14", "41", null, "6", "7", null, "38", "24"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "21", "15", null, "12", "37", null, "4", "8", null, "9", "19", null, "46", "31"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "11", "20", null, "33", "43", null, "42", "30", null, "2", "10", null, "28", "45"],
-            [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-            [null, "36", "25", null, "47", "44", null, "26", "39", null, "40", "27", null, "23", null],
-            [null, null, null, null, null, null, null, "教师的座位", null, null, null, null, null, null, null]
-        ];
+  <footer>
+    Made with Deepseek AI, ChatGPT & Hosted On GitHub | Jay
+  </footer>
 
-        // 初始化表格
-        function initializeTable() {
-            const table = document.getElementById('seatTable');
-            table.innerHTML = '';
-            
-            // 尝试从localStorage加载保存的数据
-            const savedData = localStorage.getItem('seatTableData');
-            let currentData = savedData ? JSON.parse(savedData) : null;
-            
-            seatLayout.forEach((row, rowIndex) => {
-                const tr = document.createElement('tr');
-                row.forEach((cell, colIndex) => {
-                    const td = document.createElement('td');
-                    if (cell === null) {
-                        td.className = 'empty';
-                    } else if (cell === "教师的座位") {
-                        td.className = 'teacher';
-                        td.textContent = cell;
-                    } else {
-                        // 如果有保存的数据，使用保存的值，否则使用初始值
-                        const savedValue = currentData ? currentData[rowIndex][colIndex] : cell;
-                        td.textContent = savedValue;
-                        td.addEventListener('click', function() {
-                            const newNum = prompt("输入新号码 (1-47):", this.textContent);
-                            if (newNum !== null && newNum !== "" && !isNaN(newNum)) {
-                                this.textContent = newNum;
-                                saveCurrentState(); // 保存修改
-                            }
-                        });
-                    }
-                    tr.appendChild(td);
-                });
-                table.appendChild(tr);
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script>
+    const studentNames = [
+      "", "邱穆芸", "陈妍希", "张芷欣", "杨时瑜", "颜姿彤", "许亦萱", "陈嘉恩", "陈钏宁", "李静恩", "刘瑞恩",
+      "黄禹嫣", "妮娅", "陈姿卉", "何汶宣", "王歆茹", "潘姿颖", "施凯馨", "陈渝恩", "戴湘霖", "王婧涵", "许悦影", 
+      "朱俊绅", "陈毅祥", "谢承邑", "张智勇", "何凯旭", "赖家禾", "江致承", "刘俊祥", "卢隽益", "廖炫鑫", 
+      "刘宽辅", "卢裕城", "黄康桀", "伍思源", "彭宇乐", "潘家扬", "陈晋佑", "陈有权", "余根权", "黄凯杰", 
+      "黄恩杰", "黄俊熹", "黄明杰", "叶峻睿", "叶礼诚", "杨仁喆"
+    ];
+
+    const seatLayout = [
+      [null, null, null, "13", "7", null, null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, "46", "31", null, "15", "21", null, "47", "45", null, "32", null],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      [null, null, null, "5", "34", null, "16", "8", null, "44", "41", null, "12", "11"],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      ["18", "17", null, "1", "10", null, "2", "30", null, "24", "38", null, "3", "20"],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      ["19", "9", null, "14", "6", null, "4", "42", null, "37", "33", null, "28", "27"],
+      [null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      ["26", "35", null, "29", "39", null, "25", "36", null, "43", "22", null, "40", "23"],
+      [null, null, null, null, null, null, "教师", "的座位", null, null, null, null, null, null]
+    ];
+
+    function initializeTable() {
+      const table = document.getElementById('seatTable');
+      table.innerHTML = '';
+      const savedData = JSON.parse(localStorage.getItem('seatTableData') || "null");
+
+      seatLayout.forEach((row, rowIndex) => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, colIndex) => {
+          const td = document.createElement('td');
+          if (cell === null) {
+            td.className = 'empty';
+          } else if (cell === "教师" || cell === "的座位") {
+            td.className = 'teacher';
+            td.textContent = cell;
+          } else {
+            const number = savedData ? parseInt(savedData[rowIndex][colIndex]) : parseInt(cell);
+            td.textContent = `${number} ${studentNames[number]}`;
+            td.classList.add('student');
+            td.addEventListener('click', function () {
+              const currentNum = parseInt(this.textContent.split(" ")[0]);
+              const newNum = prompt("输入新号码 (1-47):", currentNum);
+              const parsed = parseInt(newNum);
+              if (!isNaN(parsed) && parsed >= 1 && parsed <= 47) {
+                this.textContent = `${parsed} ${studentNames[parsed]}`;
+                this.classList.add('student');
+                saveCurrentState();
+              }
             });
-        }
+          }
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    }
 
-        // 保存当前状态到localStorage
-        function saveCurrentState() {
-            const table = document.getElementById('seatTable');
-            const rows = table.querySelectorAll('tr');
-            const currentData = [];
-            
-            rows.forEach(row => {
-                const rowData = [];
-                const cells = row.querySelectorAll('td');
-                cells.forEach(cell => {
-                    if (cell.classList.contains('teacher')) {
-                        rowData.push("教师的座位");
-                    } else if (cell.classList.contains('empty')) {
-                        rowData.push(null);
-                    } else {
-                        rowData.push(cell.textContent);
-                    }
-                });
-                currentData.push(rowData);
-            });
-            
-            localStorage.setItem('seatTableData', JSON.stringify(currentData));
-        }
+    function saveCurrentState() {
+      const table = document.getElementById('seatTable');
+      const rows = table.querySelectorAll('tr');
+      const currentData = [];
 
-        // 随机分配座位
-        function randomizeSeats() {
-            const seats = Array.from(document.querySelectorAll('td:not(.empty):not(.teacher)'));
-            let numbers = Array.from({length: 47}, (_, i) => i + 1);
-            numbers = numbers.sort(() => Math.random() - 0.5);
-            
-            seats.forEach((seat, index) => {
-                seat.textContent = numbers[index];
-            });
-            
-            saveCurrentState(); // 保存随机分配结果
-        }
+      rows.forEach(row => {
+        const rowData = [];
+        const cells = row.querySelectorAll('td');
+        cells.forEach(cell => {
+          if (cell.classList.contains('teacher')) {
+            rowData.push(cell.textContent);
+          } else if (cell.classList.contains('empty')) {
+            rowData.push(null);
+          } else {
+            rowData.push(parseInt(cell.textContent.split(" ")[0]));
+          }
+        });
+        currentData.push(rowData);
+      });
 
-        // 重置座位表
-        function resetTable() {
-            if (confirm('确定要重置座位表吗？所有更改将丢失。')) {
-                localStorage.removeItem('seatTableData');
-                initializeTable();
-            }
-        }
+      localStorage.setItem('seatTableData', JSON.stringify(currentData));
+    }
 
-        // 导出为PNG
-        function exportToPNG() {
-            const table = document.getElementById('seatTable');
-            
-            html2canvas(table, {
-                backgroundColor: '#FFFFFF',
-                scale: 2
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = '座位表.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
-        }
+    function assignPair(seats, pair, nums) {
+      seats[pair[0]].textContent = `${nums[0]} ${studentNames[nums[0]]}`;
+      seats[pair[1]].textContent = `${nums[1]} ${studentNames[nums[1]]}`;
+    }
 
-        // 初始化页面
+    function findAdjacentSeatPairs(seats) {
+      const pairs = [];
+      const seatPos = new Map();
+      seats.forEach((seat, idx) => {
+        const row = seat.parentNode.rowIndex;
+        const col = Array.from(seat.parentNode.cells).indexOf(seat);
+        seatPos.set(idx, { row, col });
+      });
+
+      for (let i = 0; i < seats.length; i++) {
+        for (let j = i + 1; j < seats.length; j++) {
+          const pos1 = seatPos.get(i), pos2 = seatPos.get(j);
+          if ((Math.abs(pos1.row - pos2.row) === 1 && pos1.col === pos2.col) ||
+              (Math.abs(pos1.col - pos2.col) === 1 && pos1.row === pos2.row)) {
+            pairs.push([i, j]);
+          }
+        }
+      }
+      return pairs;
+    }
+
+    function randomizeSeats() {
+      const seats = Array.from(document.querySelectorAll('td.student'));
+      let numbers = Array.from({ length: 47 }, (_, i) => i + 1);
+
+      const removeFromPool = (nums) => {
+        numbers = numbers.filter(n => !nums.includes(n));
+      };
+
+      const assignFixedPair = (pairNums, probability) => {
+        if (Math.random() <= probability) {
+          const adjacentPairs = findAdjacentSeatPairs(seats);
+          if (adjacentPairs.length > 0) {
+            const chosenPair = adjacentPairs.splice(Math.floor(Math.random() * adjacentPairs.length), 1)[0];
+            assignPair(seats, chosenPair, pairNums);
+            return chosenPair;
+          }
+        }
+        return [];
+      };
+
+      // Always pair 46 & 31
+      removeFromPool([46, 31]);
+      const pair46_31 = assignFixedPair([46, 31], 1);
+
+      // 90% chance pair 4 & 42
+      removeFromPool([4, 42]);
+      const pair4_42 = assignFixedPair([4, 42], 0.9);
+
+      // 70% chance pair 2 & 30
+      removeFromPool([2, 30]);
+      const pair2_30 = assignFixedPair([2, 30], 0.7);
+
+      numbers.sort(() => Math.random() - 0.5);
+      let idx = 0;
+      for (let i = 0; i < seats.length; i++) {
+        if (![...pair46_31, ...pair4_42, ...pair2_30].includes(i)) {
+          const num = numbers[idx++];
+          seats[i].textContent = `${num} ${studentNames[num]}`;
+        }
+      }
+      saveCurrentState();
+    }
+
+    function resetTable() {
+      if (confirm('Proceed to reset? All changes will be reseted. 确定要重置座位表吗？所有更改将丢失。')) {
+        localStorage.removeItem('seatTableData');
         initializeTable();
-        document.getElementById('randomizeBtn').addEventListener('click', randomizeSeats);
-        document.getElementById('exportBtn').addEventListener('click', exportToPNG);
-        document.getElementById('resetBtn').addEventListener('click', resetTable);
-    </script>
+      }
+    }
+
+    function exportToPNG() {
+      const table = document.getElementById('seatTable');
+      html2canvas(table, {
+        backgroundColor: '#FFFFFF',
+        scale: 2
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = '座位表.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    initializeTable();
+    document.getElementById('randomizeBtn').addEventListener('click', randomizeSeats);
+    document.getElementById('exportBtn').addEventListener('click', exportToPNG);
+    document.getElementById('resetBtn').addEventListener('click', resetTable);
+  </script>
 </body>
 </html>
